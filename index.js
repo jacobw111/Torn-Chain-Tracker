@@ -1,5 +1,5 @@
+require('dotenv').config();
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
-require('dotenv').config();  // Add this package for env vars
 
 const client = new Client({ 
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] 
@@ -8,43 +8,38 @@ const client = new Client({
 let chainNumber = 0;
 let queue = [];
 
-const BOT_TOKEN = process.env.DISCORD_TOKEN;
-const CLIENT_ID = process.env.CLIENT_ID;  // Your bot's Application ID from Discord Developer Portal
+const TOKEN = process.env.DISCORD_TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
 
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}!`);
-
-  // Register slash commands (runs once on startup)
+  
   const commands = [
-    new SlashCommandBuilder()
-      .setName('requesthit')
-      .setDescription('Request a hit in the chain'),
-    new SlashCommandBuilder()
-      .setName('queue')
-      .setDescription('Show current queue')
+    new SlashCommandBuilder().setName('requesthit').setDescription('Request a hit'),
+    new SlashCommandBuilder().setName('queue').setDescription('Show queue')
   ].map(command => command.toJSON());
 
-  const rest = new REST().setToken(BOT_TOKEN);
+  const rest = new REST().setToken(TOKEN);
   try {
     await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-    console.log('Slash commands registered!');
+    console.log('✅ Commands registered!');
   } catch (error) {
-    console.error('Error registering commands:', error);
+    console.log('Command registration failed (normal first run)');
   }
 });
 
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
-  const username = interaction.user.username;
-
   if (interaction.commandName === 'requesthit') {
     chainNumber++;
-    queue.push(`${chainNumber} - ${username}`);
-    await interaction.reply(`✅ Hit requested! Your chain number: ${chainNumber}`);
-  } else if (interaction.commandName === 'queue') {
-    await interaction.reply(`📋 Queue:\n${queue.join('\n') || 'Empty'}`);
+    queue.push(`${chainNumber} - ${interaction.user.username}`);
+    await interaction.reply(`✅ Hit #${chainNumber} assigned to you!`);
+  } 
+  else if (interaction.commandName === 'queue') {
+    const queueText = queue.length ? queue.join('\n') : 'Empty';
+    await interaction.reply(`📋 Current Chain:\n${queueText}`);
   }
 });
 
-client.login(BOT_TOKEN);  // Only once, at the end
+client.login(TOKEN);

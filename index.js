@@ -24,5 +24,7 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.commandName === 'queue') {
     await interaction.reply(`📋 Queue:\n${queue.join('\n')}`);
+    const BOT_TOKEN = process.env.DISCORD_TOKEN;
+client.login(BOT_TOKEN);
   }
 });
